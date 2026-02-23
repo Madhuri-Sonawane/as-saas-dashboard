@@ -25,7 +25,6 @@ function AIAssistantPage() {
       const finalMessages = [...updatedMessages, { role: "assistant", content: reply }]
       setMessages(finalMessages)
 
-      // Save to Firestore
       await addDoc(collection(db, "conversations"), {
         userId: user.uid,
         prompt: input,
@@ -55,8 +54,10 @@ function AIAssistantPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">AI Assistant</h1>
-            <p className="text-gray-400 text-sm mt-1">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              AI Assistant
+            </h1>
+            <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
               Powered by Google Gemini
             </p>
           </div>
@@ -64,7 +65,7 @@ function AIAssistantPage() {
           {messages.length > 0 && (
             <button
               onClick={handleClear}
-              className="flex items-center gap-2 text-sm text-gray-400 hover:text-red-500 transition px-3 py-2 rounded-xl hover:bg-red-50"
+              className="flex items-center gap-2 text-sm text-gray-400 hover:text-red-500 transition px-3 py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20"
             >
               <Trash2 size={15} />
               Clear chat
@@ -73,16 +74,21 @@ function AIAssistantPage() {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col overflow-hidden p-4">
-          <ChatBox messages={messages} loading={loading} />
+        <div className="flex-1 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 flex flex-col overflow-hidden p-4 min-h-0">
 
-          {/* Input */}
-          <div className="mt-3">
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto min-h-0">
+            <ChatBox messages={messages} loading={loading} />
+          </div>
+
+          {/* Input — always at bottom */}
+          <div className="mt-3 flex-shrink-0">
             <PromptInput onSend={handleSend} loading={loading} />
-            <p className="text-center text-xs text-gray-300 mt-2">
+            <p className="text-center text-xs text-gray-300 dark:text-gray-600 mt-2">
               AI can make mistakes. Verify important information.
             </p>
           </div>
+
         </div>
 
       </div>

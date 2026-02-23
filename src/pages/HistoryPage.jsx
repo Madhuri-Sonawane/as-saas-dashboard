@@ -65,20 +65,15 @@ function HistoryPage() {
   return (
     <PageWrapper>
       <Toaster position="top-right" />
-
       <div className="flex flex-col gap-6">
 
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">History</h1>
-            <p className="text-gray-400 text-sm mt-1">
-              All your past AI conversations
-            </p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">History</h1>
+            <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">All your past AI conversations</p>
           </div>
-          <span className="text-sm text-gray-400">
-            {conversations.length} conversations
-          </span>
+          <span className="text-sm text-gray-400">{conversations.length} conversations</span>
         </div>
 
         {/* Search */}
@@ -89,7 +84,7 @@ function HistoryPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search conversations..."
-            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500 transition"
+            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500 transition"
           />
         </div>
 
@@ -97,41 +92,37 @@ function HistoryPage() {
         {loading ? (
           <div className="flex flex-col gap-3">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white rounded-2xl p-5 border border-gray-100 animate-pulse">
-                <div className="h-4 bg-gray-100 rounded w-3/4 mb-3" />
-                <div className="h-3 bg-gray-100 rounded w-1/2" />
+              <div key={i} className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 animate-pulse">
+                <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-3/4 mb-3" />
+                <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-1/2" />
               </div>
             ))}
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mb-4">
               <Bot size={28} className="text-gray-400" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-700">No conversations yet</h3>
-            <p className="text-gray-400 text-sm mt-1">
-              Start chatting with AI Assistant to see history here
-            </p>
+            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">No conversations yet</h3>
+            <p className="text-gray-400 text-sm mt-1">Start chatting with AI Assistant to see history here</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
             {filtered.map((conv) => (
               <div
                 key={conv.id}
-                className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition group"
+                className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition group"
               >
                 <div className="flex items-start justify-between gap-4">
-
-                  {/* Left */}
                   <div className="flex items-start gap-4 flex-1 overflow-hidden">
-                    <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center flex-shrink-0">
                       <Bot size={18} className="text-sky-500" />
                     </div>
                     <div className="flex-1 overflow-hidden">
-                      <p className="text-sm font-semibold text-gray-800 truncate">
+                      <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
                         {conv.prompt}
                       </p>
-                      <p className="text-sm text-gray-400 mt-1 line-clamp-2">
+                      <p className="text-sm text-gray-400 dark:text-gray-500 mt-1 line-clamp-2">
                         {conv.response}
                       </p>
                       <div className="flex items-center gap-4 mt-2">
@@ -146,21 +137,17 @@ function HistoryPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Delete Button */}
                   <button
                     onClick={() => handleDelete(conv.id)}
-                    className="opacity-0 group-hover:opacity-100 transition p-2 rounded-xl hover:bg-red-50 text-gray-300 hover:text-red-500"
+                    className="opacity-0 group-hover:opacity-100 transition p-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-300 hover:text-red-500"
                   >
                     <Trash2 size={15} />
                   </button>
-
                 </div>
               </div>
             ))}
           </div>
         )}
-
       </div>
     </PageWrapper>
   )

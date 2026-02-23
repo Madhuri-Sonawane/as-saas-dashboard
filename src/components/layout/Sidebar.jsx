@@ -1,19 +1,16 @@
 import { useState } from "react"
 import { NavLink } from "react-router-dom"
 import { NAV_LINKS } from "../../constants"
-import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react"
+import { ChevronLeft, ChevronRight, Sparkles, X, Menu } from "lucide-react"
 import { useAuth } from "../../context/AuthContext"
 
 function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const { user } = useAuth()
 
-  return (
-    <aside
-      className={`relative flex flex-col bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 shadow-sm transition-all duration-300 ${
-        collapsed ? "w-20" : "w-64"
-      } min-h-screen`}
-    >
+  const SidebarContent = () => (
+    <>
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 py-6 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-sky-600 text-white flex-shrink-0">
@@ -34,6 +31,7 @@ function Sidebar() {
             <NavLink
               key={link.path}
               to={link.path}
+              onClick={() => setMobileOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-3 rounded-xl font-medium text-sm transition-all duration-200 ${
                   isActive
@@ -60,23 +58,70 @@ function Sidebar() {
               <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                 {user?.displayName || "User"}
               </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{user?.email}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
+                {user?.email}
+              </p>
             </div>
           </div>
         </div>
       )}
+    </>
+  )
 
-      {/* Collapse Toggle */}
+  return (
+    <>
+      {/* Mobile Hamburger Button */}
       <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-8 w-6 h-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-full flex items-center justify-center shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition z-10"
+        onClick={() => setMobileOpen(true)}
+        className="lg:hidden fixed top-4 left-4 z-50 w-9 h-9 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl flex items-center justify-center shadow-sm"
       >
-        {collapsed
-          ? <ChevronRight size={12} className="text-gray-500" />
-          : <ChevronLeft size={12} className="text-gray-500" />
-        }
+        <Menu size={18} className="text-gray-600 dark:text-gray-300" />
       </button>
-    </aside>
+
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Mobile Sidebar */}
+      <aside
+        className={`lg:hidden fixed top-0 left-0 z-50 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 shadow-xl flex flex-col transition-transform duration-300 ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {/* Close Button */}
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+        >
+          <X size={16} className="text-gray-500" />
+        </button>
+        <SidebarContent />
+      </aside>
+
+      {/* Desktop Sidebar */}
+      <aside
+        className={`hidden lg:flex flex-col relative bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 shadow-sm transition-all duration-300 ${
+          collapsed ? "w-20" : "w-64"
+        } min-h-screen`}
+      >
+        <SidebarContent />
+
+        {/* Collapse Toggle */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="absolute -right-3 top-8 w-6 h-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-full flex items-center justify-center shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition z-10"
+        >
+          {collapsed
+            ? <ChevronRight size={12} className="text-gray-500" />
+            : <ChevronLeft size={12} className="text-gray-500" />
+          }
+        </button>
+      </aside>
+    </>
   )
 }
 

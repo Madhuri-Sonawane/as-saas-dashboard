@@ -20,7 +20,7 @@ function Navbar() {
   }
 
   return (
-    <header className="h-16 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between px-6 shadow-sm transition-colors duration-200">
+    <header className="h-16 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between px-6 lg:px-6 pl-16 lg:pl-6 shadow-sm transition-colors duration-200">
       <Toaster position="top-right" />
 
       {/* Left */}
@@ -35,7 +35,7 @@ function Navbar() {
       </div>
 
       {/* Right */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
 
         {/* Dark Mode Toggle */}
         <button
