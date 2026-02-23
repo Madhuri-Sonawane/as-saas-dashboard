@@ -223,6 +223,5 @@ This project is open source and available under the [MIT License](LICENSE).
 
 Built with ❤️ as a portfolio project to demonstrate full-stack React development skills.
 
-- GitHub: [@your-username](https://github.com/your-username)
-- LinkedIn: [your-linkedin](https://linkedin.com/in/your-linkedin)
+- Madhuri Sonawane
 ```
