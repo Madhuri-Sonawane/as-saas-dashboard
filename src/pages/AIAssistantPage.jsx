@@ -5,10 +5,14 @@ import PromptInput from "../components/ai/PromptInput"
 import { sendMessageToGemini } from "../services/gemini"
 import { Trash2 } from "lucide-react"
 import toast, { Toaster } from "react-hot-toast"
+import { db } from "../services/firebase"
+import { collection, addDoc, serverTimestamp } from "firebase/firestore"
+import { useAuth } from "../context/AuthContext"
 
 function AIAssistantPage() {
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(false)
+  const { user } = useAuth()
 
   const handleSend = async (input) => {
     const userMessage = { role: "user", content: input }
@@ -18,7 +22,18 @@ function AIAssistantPage() {
 
     try {
       const reply = await sendMessageToGemini(updatedMessages)
-      setMessages([...updatedMessages, { role: "assistant", content: reply }])
+      const finalMessages = [...updatedMessages, { role: "assistant", content: reply }]
+      setMessages(finalMessages)
+
+      // Save to Firestore
+      await addDoc(collection(db, "conversations"), {
+        userId: user.uid,
+        prompt: input,
+        response: reply,
+        tokens: Math.floor((input.length + reply.length) / 4),
+        createdAt: serverTimestamp(),
+      })
+
     } catch (err) {
       toast.error("Failed to get response. Check your API key.")
     } finally {
