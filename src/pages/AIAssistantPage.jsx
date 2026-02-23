@@ -15,6 +15,8 @@ function AIAssistantPage() {
   const { user } = useAuth()
 
   const handleSend = async (input) => {
+    if (loading) return
+
     const userMessage = { role: "user", content: input }
     const updatedMessages = [...messages, userMessage]
     setMessages(updatedMessages)
@@ -22,25 +24,33 @@ function AIAssistantPage() {
 
     try {
       const reply = await sendMessageToGemini(updatedMessages)
-      const finalMessages = [...updatedMessages, { role: "assistant", content: reply }]
-      setMessages(finalMessages)
 
-      await addDoc(collection(db, "conversations"), {
-        userId: user.uid,
-        prompt: input,
-        response: reply,
-        tokens: Math.floor((input.length + reply.length) / 4),
-        createdAt: serverTimestamp(),
-      })
+      const assistantMessage = { role: "assistant", content: reply }
+      setMessages([...updatedMessages, assistantMessage])
+
+      // Save to Firestore
+      try {
+        await addDoc(collection(db, "conversations"), {
+          userId: user.uid,
+          prompt: input,
+          response: reply,
+          tokens: Math.floor((input.length + reply.length) / 4),
+          createdAt: serverTimestamp(),
+        })
+      } catch (firestoreErr) {
+        console.error("Firestore save error:", firestoreErr)
+      }
 
     } catch (err) {
-      toast.error("Failed to get response. Check your API key.")
+      console.error("Gemini error:", err)
+      toast.error("Failed to get response. Try again.")
     } finally {
       setLoading(false)
     }
   }
 
   const handleClear = () => {
+    if (loading) return
     setMessages([])
     toast.success("Chat cleared!")
   }
@@ -62,7 +72,7 @@ function AIAssistantPage() {
             </p>
           </div>
 
-          {messages.length > 0 && (
+          {messages.length > 0 && !loading && (
             <button
               onClick={handleClear}
               className="flex items-center gap-2 text-sm text-gray-400 hover:text-red-500 transition px-3 py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20"
@@ -78,10 +88,10 @@ function AIAssistantPage() {
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto min-h-0">
-            <ChatBox messages={messages} loading={loading} />
+            <ChatBox messages={messages} loading={loading} onSend={handleSend} />
           </div>
 
-          {/* Input — always at bottom */}
+          {/* Input */}
           <div className="mt-3 flex-shrink-0">
             <PromptInput onSend={handleSend} loading={loading} />
             <p className="text-center text-xs text-gray-300 dark:text-gray-600 mt-2">

@@ -2,14 +2,14 @@ import { useEffect, useRef } from "react"
 import ChatMessage from "./ChatMessage"
 import { Bot } from "lucide-react"
 
-function ChatBox({ messages, loading }) {
+function ChatBox({ messages, loading, onSend }) {
   const bottomRef = useRef(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages, loading])
 
-  if (messages.length === 0) {
+  if (messages.length === 0 && !loading) {
     return (
       <div className="h-full flex flex-col items-center justify-center gap-4 text-center px-6">
         <div className="w-16 h-16 rounded-2xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center">
@@ -30,12 +30,13 @@ function ChatBox({ messages, loading }) {
             "Debug my code",
             "Summarize a topic",
           ].map((suggestion) => (
-            <span
+            <button
               key={suggestion}
+              onClick={() => onSend(suggestion)}
               className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 text-xs rounded-full cursor-pointer transition"
             >
               {suggestion}
-            </span>
+            </button>
           ))}
         </div>
       </div>
@@ -48,6 +49,7 @@ function ChatBox({ messages, loading }) {
         <ChatMessage key={index} message={msg} />
       ))}
 
+      {/* Show loading dots ONLY while waiting for response */}
       {loading && (
         <div className="flex gap-3">
           <div className="w-8 h-8 rounded-full bg-violet-500 flex items-center justify-center flex-shrink-0">
@@ -62,6 +64,7 @@ function ChatBox({ messages, loading }) {
           </div>
         </div>
       )}
+
       <div ref={bottomRef} />
     </div>
   )
