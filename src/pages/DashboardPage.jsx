@@ -3,12 +3,7 @@ import StatsCard from "../components/dashboard/StatsCard"
 import UsageChart from "../components/dashboard/UsageChart"
 import RecentActivity from "../components/dashboard/RecentActivity"
 import { useAuth } from "../context/AuthContext"
-import {
-  Bot,
-  Zap,
-  Clock,
-  TrendingUp,
-} from "lucide-react"
+import { Bot, Zap, Clock, TrendingUp } from "lucide-react"
 
 const stats = [
   {
@@ -50,15 +45,15 @@ function DashboardPage() {
 
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Good morning, {user?.displayName || "User"} 👋
           </h1>
-          <p className="text-gray-400 mt-1">
+          <p className="text-gray-400 dark:text-gray-500 mt-1">
             Here's what's happening with your AI usage today.
           </p>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat) => (
             <StatsCard key={stat.title} {...stat} />
@@ -67,17 +62,12 @@ function DashboardPage() {
 
         {/* Chart + Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-          {/* Chart takes 2/3 */}
           <div className="lg:col-span-2">
             <UsageChart />
           </div>
-
-          {/* Activity takes 1/3 */}
           <div className="lg:col-span-1">
             <RecentActivity />
           </div>
-
         </div>
 
       </div>

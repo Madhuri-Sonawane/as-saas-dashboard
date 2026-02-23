@@ -1,11 +1,6 @@
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis,
+  CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts"
 
 const data = [
@@ -20,12 +15,11 @@ const data = [
 
 function UsageChart() {
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800">
       <div className="mb-6">
-        <h2 className="text-lg font-bold text-gray-900">Weekly Usage</h2>
-        <p className="text-sm text-gray-400">Your AI queries over the past 7 days</p>
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Weekly Usage</h2>
+        <p className="text-sm text-gray-400 dark:text-gray-500">Your AI queries over the past 7 days</p>
       </div>
-
       <ResponsiveContainer width="100%" height={250}>
         <AreaChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
           <defs>
@@ -34,33 +28,19 @@ function UsageChart() {
               <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-          <XAxis
-            dataKey="day"
-            tick={{ fontSize: 12, fill: "#94a3b8" }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            tick={{ fontSize: 12, fill: "#94a3b8" }}
-            axisLine={false}
-            tickLine={false}
-          />
+          <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+          <XAxis dataKey="day" tick={{ fontSize: 12, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fontSize: 12, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
           <Tooltip
             contentStyle={{
-              backgroundColor: "#fff",
-              border: "1px solid #e2e8f0",
+              backgroundColor: "#111827",
+              border: "1px solid #1f2937",
               borderRadius: "12px",
               fontSize: "13px",
+              color: "#f9fafb",
             }}
           />
-          <Area
-            type="monotone"
-            dataKey="queries"
-            stroke="#0ea5e9"
-            strokeWidth={2.5}
-            fill="url(#colorQueries)"
-          />
+          <Area type="monotone" dataKey="queries" stroke="#0ea5e9" strokeWidth={2.5} fill="url(#colorQueries)" />
         </AreaChart>
       </ResponsiveContainer>
     </div>
