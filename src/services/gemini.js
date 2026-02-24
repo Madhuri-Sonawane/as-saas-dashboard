@@ -2,35 +2,19 @@ import { GoogleGenerativeAI } from "@google/generative-ai"
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
 
-const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" })
-
 export const sendMessageToGemini = async (messages) => {
-  try {
-    if (messages.length === 1) {
-      const result = await model.generateContent(messages[0].content)
-      const response = await result.response
-      return response.text()
-    }
+  const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" })
 
-    const history = messages.slice(0, -1).map((msg) => ({
-      role: msg.role === "user" ? "user" : "model",
-      parts: [{ text: msg.content }],
-    }))
+  const lastMessage = messages[messages.length - 1].content
 
-    const chat = model.startChat({
-      history,
-      generationConfig: {
-        maxOutputTokens: 1000,
-      },
-    })
+  // Build history excluding last message
+  const history = messages.slice(0, -1).map((msg) => ({
+    role: msg.role === "user" ? "user" : "model",
+    parts: [{ text: msg.content }],
+  }))
 
-    const lastMessage = messages[messages.length - 1].content
-    const result = await chat.sendMessage(lastMessage)
-    const response = await result.response
-    return response.text()
-
-  } catch (error) {
-    console.error("Gemini error:", error)
-    throw error
-  }
+  const chat = model.startChat({ history })
+  const result = await chat.sendMessage(lastMessage)
+  const text = result.response.text()
+  return text
 }

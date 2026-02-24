@@ -3,14 +3,16 @@ import PageWrapper from "../components/layout/PageWrapper"
 import { db } from "../services/firebase"
 import { collection, query, where, orderBy, getDocs, deleteDoc, doc } from "firebase/firestore"
 import { useAuth } from "../context/AuthContext"
-import { Bot, Clock, Trash2, Search, Zap } from "lucide-react"
+import { Bot, Clock, Trash2, Search, Zap, MessageSquare } from "lucide-react"
 import toast, { Toaster } from "react-hot-toast"
+import { useNavigate } from "react-router-dom"
 
 function HistoryPage() {
   const [conversations, setConversations] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
   const { user } = useAuth()
+  const navigate = useNavigate()
 
   const fetchConversations = async () => {
     setLoading(true)
@@ -37,7 +39,8 @@ function HistoryPage() {
     fetchConversations()
   }, [])
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (e, id) => {
+    e.stopPropagation() // prevent opening conversation
     try {
       await deleteDoc(doc(db, "conversations", id))
       setConversations((prev) => prev.filter((c) => c.id !== id))
@@ -45,6 +48,18 @@ function HistoryPage() {
     } catch (err) {
       toast.error("Failed to delete")
     }
+  }
+
+  const handleOpen = (conv) => {
+    // Pass conversation to AI Assistant page via navigation state
+    navigate("/ai-assistant", {
+      state: {
+        messages: [
+          { role: "user", content: conv.prompt },
+          { role: "assistant", content: conv.response },
+        ]
+      }
+    })
   }
 
   const formatTime = (timestamp) => {
@@ -65,13 +80,16 @@ function HistoryPage() {
   return (
     <PageWrapper>
       <Toaster position="top-right" />
+
       <div className="flex flex-col gap-6">
 
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">History</h1>
-            <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">All your past AI conversations</p>
+            <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
+              Click any conversation to continue it
+            </p>
           </div>
           <span className="text-sm text-gray-400">{conversations.length} conversations</span>
         </div>
@@ -103,17 +121,24 @@ function HistoryPage() {
             <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mb-4">
               <Bot size={28} className="text-gray-400" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">No conversations yet</h3>
-            <p className="text-gray-400 text-sm mt-1">Start chatting with AI Assistant to see history here</p>
+            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+              No conversations yet
+            </h3>
+            <p className="text-gray-400 text-sm mt-1">
+              Start chatting with AI Assistant to see history here
+            </p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
             {filtered.map((conv) => (
               <div
                 key={conv.id}
-                className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition group"
+                onClick={() => handleOpen(conv)}
+                className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md hover:border-sky-200 dark:hover:border-sky-800 transition group cursor-pointer"
               >
                 <div className="flex items-start justify-between gap-4">
+
+                  {/* Left */}
                   <div className="flex items-start gap-4 flex-1 overflow-hidden">
                     <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center flex-shrink-0">
                       <Bot size={18} className="text-sky-500" />
@@ -137,17 +162,27 @@ function HistoryPage() {
                       </div>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDelete(conv.id)}
-                    className="opacity-0 group-hover:opacity-100 transition p-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-300 hover:text-red-500"
-                  >
-                    <Trash2 size={15} />
-                  </button>
+
+                  {/* Right actions */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="opacity-0 group-hover:opacity-100 transition flex items-center gap-1 text-xs text-sky-500 font-medium">
+                      <MessageSquare size={12} />
+                      Continue
+                    </span>
+                    <button
+                      onClick={(e) => handleDelete(e, conv.id)}
+                      className="opacity-0 group-hover:opacity-100 transition p-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-300 hover:text-red-500"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+
                 </div>
               </div>
             ))}
           </div>
         )}
+
       </div>
     </PageWrapper>
   )

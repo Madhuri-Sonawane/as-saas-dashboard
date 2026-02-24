@@ -17,18 +17,34 @@ function AIAssistantPage() {
   const handleSend = async (input) => {
     if (loading) return
 
+    // 1. Add user message immediately
     const userMessage = { role: "user", content: input }
     const updatedMessages = [...messages, userMessage]
     setMessages(updatedMessages)
     setLoading(true)
 
+    let reply = ""
+
     try {
-      const reply = await sendMessageToGemini(updatedMessages)
+      // 2. Get Gemini response
+      reply = await sendMessageToGemini(updatedMessages)
+      console.log("Gemini reply received:", reply?.slice(0, 50))
 
-      const assistantMessage = { role: "assistant", content: reply }
-      setMessages([...updatedMessages, assistantMessage])
+      // 3. Add assistant message
+      setMessages(prev => [...prev, { role: "assistant", content: reply }])
 
-      // Save to Firestore
+    } catch (err) {
+      console.error("Gemini error:", err)
+      toast.error("Failed to get response. Try again.")
+      setLoading(false)
+      return
+    }
+
+    // 4. Stop loading AFTER message is set
+    setLoading(false)
+
+    // 5. Save to Firestore separately (won't block UI)
+    if (reply && user?.uid) {
       try {
         await addDoc(collection(db, "conversations"), {
           userId: user.uid,
@@ -37,15 +53,10 @@ function AIAssistantPage() {
           tokens: Math.floor((input.length + reply.length) / 4),
           createdAt: serverTimestamp(),
         })
+        console.log("Saved to Firestore!")
       } catch (firestoreErr) {
-        console.error("Firestore save error:", firestoreErr)
+        console.error("Firestore error:", firestoreErr)
       }
-
-    } catch (err) {
-      console.error("Gemini error:", err)
-      toast.error("Failed to get response. Try again.")
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -71,7 +82,6 @@ function AIAssistantPage() {
               Powered by Google Gemini
             </p>
           </div>
-
           {messages.length > 0 && !loading && (
             <button
               onClick={handleClear}
@@ -86,12 +96,10 @@ function AIAssistantPage() {
         {/* Chat Area */}
         <div className="flex-1 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 flex flex-col overflow-hidden p-4 min-h-0">
 
-          {/* Messages */}
           <div className="flex-1 overflow-y-auto min-h-0">
             <ChatBox messages={messages} loading={loading} onSend={handleSend} />
           </div>
 
-          {/* Input */}
           <div className="mt-3 flex-shrink-0">
             <PromptInput onSend={handleSend} loading={loading} />
             <p className="text-center text-xs text-gray-300 dark:text-gray-600 mt-2">
@@ -100,7 +108,6 @@ function AIAssistantPage() {
           </div>
 
         </div>
-
       </div>
     </PageWrapper>
   )
