@@ -17,25 +17,17 @@ function SettingsPage() {
   const [loadingDelete, setLoadingDelete] = useState(false)
   const [stats, setStats] = useState({ total: 0, tokens: 0 })
 
-  // Live real-time stats using onSnapshot
   useEffect(() => {
     if (!user?.uid) return
-
     const q = query(
       collection(db, "conversations"),
       where("userId", "==", user.uid)
     )
-
-    // onSnapshot listens in real-time — updates whenever Firestore changes
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const docs = snapshot.docs.map((d) => d.data())
       const totalTokens = docs.reduce((sum, d) => sum + (d.tokens || 0), 0)
       setStats({ total: docs.length, tokens: totalTokens })
-    }, (err) => {
-      console.error("Stats error:", err)
     })
-
-    // Cleanup listener when component unmounts
     return () => unsubscribe()
   }, [user?.uid])
 
@@ -44,8 +36,8 @@ function SettingsPage() {
     setLoadingName(true)
     try {
       await updateProfile(auth.currentUser, { displayName })
-      toast.success("Name updated successfully!")
-    } catch (err) {
+      toast.success("Name updated!")
+    } catch {
       toast.error("Failed to update name")
     } finally {
       setLoadingName(false)
@@ -53,17 +45,17 @@ function SettingsPage() {
   }
 
   const handleUpdatePassword = async () => {
-    if (!newPassword || !confirmPassword) { toast.error("Please fill in both fields"); return }
+    if (!newPassword || !confirmPassword) { toast.error("Fill in both fields"); return }
     if (newPassword !== confirmPassword) { toast.error("Passwords do not match"); return }
-    if (newPassword.length < 6) { toast.error("Password must be at least 6 characters"); return }
+    if (newPassword.length < 6) { toast.error("Min. 6 characters"); return }
     setLoadingPassword(true)
     try {
       await updatePassword(auth.currentUser, newPassword)
-      toast.success("Password updated successfully!")
+      toast.success("Password updated!")
       setNewPassword("")
       setConfirmPassword("")
-    } catch (err) {
-      toast.error("Failed to update password. Please re-login and try again.")
+    } catch {
+      toast.error("Failed. Please re-login and try again.")
     } finally {
       setLoadingPassword(false)
     }
@@ -76,8 +68,8 @@ function SettingsPage() {
     try {
       await deleteUser(auth.currentUser)
       await logout()
-    } catch (err) {
-      toast.error("Failed to delete. Please re-login and try again.")
+    } catch {
+      toast.error("Failed. Please re-login and try again.")
     } finally {
       setLoadingDelete(false)
     }
@@ -88,21 +80,16 @@ function SettingsPage() {
       <Toaster position="top-right" />
       <div className="flex flex-col gap-6 max-w-2xl">
 
-        {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
           <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Manage your account and preferences</p>
         </div>
 
-        {/* Live Usage Stats */}
+        {/* Usage Stats — no Live badge */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <BarChart2 size={18} className="text-sky-500" />
             <h2 className="text-base font-bold text-gray-900 dark:text-white">Your Usage</h2>
-            <span className="ml-auto text-xs text-emerald-500 font-medium flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-              Live
-            </span>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-sky-50 dark:bg-sky-900/20 rounded-xl p-4">

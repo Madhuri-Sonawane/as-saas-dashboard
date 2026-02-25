@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react"
 import PageWrapper from "../components/layout/PageWrapper"
 import { db } from "../services/firebase"
-import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore"
+import { collection, query, where, orderBy, onSnapshot, deleteDoc, doc } from "firebase/firestore"
 import { useAuth } from "../context/AuthContext"
-import { Bot, Clock, Search, Zap, MessageSquare } from "lucide-react"
+import { Bot, Clock, Trash2, Search, Zap, MessageSquare } from "lucide-react"
+import toast, { Toaster } from "react-hot-toast"
 import { useNavigate } from "react-router-dom"
 
 function HistoryPage() {
@@ -13,7 +14,6 @@ function HistoryPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  // Live real-time history using onSnapshot
   useEffect(() => {
     if (!user?.uid) return
 
@@ -23,10 +23,12 @@ function HistoryPage() {
       orderBy("createdAt", "desc")
     )
 
+    // onSnapshot so new conversations appear instantly
+    // Data persists in Firestore permanently — logout/login won't affect it
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
+      const data = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
       }))
       setConversations(data)
       setLoading(false)
@@ -37,6 +39,16 @@ function HistoryPage() {
 
     return () => unsubscribe()
   }, [user?.uid])
+
+  const handleDelete = async (e, id) => {
+    e.stopPropagation()
+    try {
+      await deleteDoc(doc(db, "conversations", id))
+      toast.success("Deleted successfully")
+    } catch {
+      toast.error("Failed to delete")
+    }
+  }
 
   const handleOpen = (conv) => {
     navigate("/ai-assistant", {
@@ -66,6 +78,7 @@ function HistoryPage() {
 
   return (
     <PageWrapper>
+      <Toaster position="top-right" />
       <div className="flex flex-col gap-6">
 
         {/* Header */}
@@ -76,13 +89,9 @@ function HistoryPage() {
               Click any conversation to continue it
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-emerald-500 font-medium flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-              Live
-            </span>
-            <span className="text-sm text-gray-400">{conversations.length} conversations</span>
-          </div>
+          <span className="text-sm text-gray-400">
+            {conversations.length} conversations
+          </span>
         </div>
 
         {/* Search */}
@@ -152,12 +161,18 @@ function HistoryPage() {
                     </div>
                   </div>
 
-                  {/* Continue button */}
-                  <div className="flex items-center flex-shrink-0">
-                    <span className="opacity-0 group-hover:opacity-100 transition flex items-center gap-1 text-xs text-sky-500 font-medium bg-sky-50 dark:bg-sky-900/20 px-3 py-1.5 rounded-lg">
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="opacity-0 group-hover:opacity-100 transition flex items-center gap-1 text-xs text-sky-500 font-medium">
                       <MessageSquare size={12} />
                       Continue
                     </span>
+                    <button
+                      onClick={(e) => handleDelete(e, conv.id)}
+                      className="opacity-0 group-hover:opacity-100 transition p-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-300 hover:text-red-500"
+                    >
+                      <Trash2 size={15} />
+                    </button>
                   </div>
                 </div>
               </div>
