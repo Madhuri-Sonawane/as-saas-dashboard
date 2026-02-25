@@ -155,47 +155,7 @@ npm run build
 
 ---
 
-## 🌐 Deployment (Vercel)
 
-1. Push your code to GitHub
-2. Go to [vercel.com](https://vercel.com) and import your repository
-3. Add all environment variables from `.env` in the Vercel dashboard
-4. Click **Deploy**
-
----
-
-## 📸 Screenshots
-
-### Dashboard
-> Stats cards, weekly usage chart, and recent activity feed
-
-### AI Assistant
-> Real-time chat with Google Gemini — supports markdown, code blocks, and tables
-
-### History
-> All past conversations saved with search and delete functionality
-
-### Settings
-> Update profile name, change password, and view usage statistics
-
-### Dark Mode
-> Full dark/light theme toggle with localStorage persistence
-
----
-
-## 🔒 Environment Variables
-
-| Variable | Description |
-|---|---|
-| `VITE_FIREBASE_API_KEY` | Firebase project API key |
-| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
-| `VITE_FIREBASE_PROJECT_ID` | Firebase project ID |
-| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID |
-| `VITE_FIREBASE_APP_ID` | Firebase app ID |
-| `VITE_GEMINI_API_KEY` | Google Gemini API key |
-
-> ⚠️ Never commit your `.env` file. It is already added to `.gitignore`.
 
 ---
 
