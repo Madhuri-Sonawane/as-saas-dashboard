@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react"
 import ChatMessage from "./ChatMessage"
 import { Bot } from "lucide-react"
 
-function ChatBox({ messages, loading, onSend }) {
+function ChatBox({ messages, loading, onSend, onEdit }) {
   const bottomRef = useRef(null)
 
   useEffect(() => {
@@ -46,10 +46,13 @@ function ChatBox({ messages, loading, onSend }) {
   return (
     <div className="flex flex-col gap-4 px-2 py-2">
       {messages.map((msg, index) => (
-        <ChatMessage key={index} message={msg} />
+        <ChatMessage
+          key={index}
+          message={msg}
+          onEdit={(newText) => onEdit(index, newText)}
+        />
       ))}
 
-      {/* Show loading dots ONLY while waiting for response */}
       {loading && (
         <div className="flex gap-3">
           <div className="w-8 h-8 rounded-full bg-violet-500 flex items-center justify-center flex-shrink-0">
@@ -64,7 +67,6 @@ function ChatBox({ messages, loading, onSend }) {
           </div>
         </div>
       )}
-
       <div ref={bottomRef} />
     </div>
   )

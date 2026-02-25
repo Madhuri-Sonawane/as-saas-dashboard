@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useLocation } from "react-router-dom"
 import PageWrapper from "../components/layout/PageWrapper"
 import ChatBox from "../components/ai/ChatBox"
 import PromptInput from "../components/ai/PromptInput"
@@ -10,14 +11,14 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore"
 import { useAuth } from "../context/AuthContext"
 
 function AIAssistantPage() {
-  const [messages, setMessages] = useState([])
+  const location = useLocation()
+  const [messages, setMessages] = useState(location.state?.messages || [])
   const [loading, setLoading] = useState(false)
   const { user } = useAuth()
 
   const handleSend = async (input) => {
     if (loading) return
 
-    // 1. Add user message immediately
     const userMessage = { role: "user", content: input }
     const updatedMessages = [...messages, userMessage]
     setMessages(updatedMessages)
@@ -26,13 +27,8 @@ function AIAssistantPage() {
     let reply = ""
 
     try {
-      // 2. Get Gemini response
       reply = await sendMessageToGemini(updatedMessages)
-      console.log("Gemini reply received:", reply?.slice(0, 50))
-
-      // 3. Add assistant message
       setMessages(prev => [...prev, { role: "assistant", content: reply }])
-
     } catch (err) {
       console.error("Gemini error:", err)
       toast.error("Failed to get response. Try again.")
@@ -40,10 +36,8 @@ function AIAssistantPage() {
       return
     }
 
-    // 4. Stop loading AFTER message is set
     setLoading(false)
 
-    // 5. Save to Firestore separately (won't block UI)
     if (reply && user?.uid) {
       try {
         await addDoc(collection(db, "conversations"), {
@@ -53,11 +47,22 @@ function AIAssistantPage() {
           tokens: Math.floor((input.length + reply.length) / 4),
           createdAt: serverTimestamp(),
         })
-        console.log("Saved to Firestore!")
       } catch (firestoreErr) {
         console.error("Firestore error:", firestoreErr)
       }
     }
+  }
+
+  // Edit: slice messages up to edited index and resend
+  const handleEdit = async (index, newText) => {
+    if (loading) return
+
+    // Keep messages before the edited one
+    const trimmedMessages = messages.slice(0, index)
+    setMessages(trimmedMessages)
+
+    // Resend with new text
+    await handleSend(newText)
   }
 
   const handleClear = () => {
@@ -65,6 +70,8 @@ function AIAssistantPage() {
     setMessages([])
     toast.success("Chat cleared!")
   }
+
+  const isFromHistory = !!location.state?.messages
 
   return (
     <PageWrapper>
@@ -79,9 +86,10 @@ function AIAssistantPage() {
               AI Assistant
             </h1>
             <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
-              Powered by Google Gemini
+              {isFromHistory ? "Continuing previous conversation" : "Powered by Google Gemini"}
             </p>
           </div>
+
           {messages.length > 0 && !loading && (
             <button
               onClick={handleClear}
@@ -97,7 +105,12 @@ function AIAssistantPage() {
         <div className="flex-1 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 flex flex-col overflow-hidden p-4 min-h-0">
 
           <div className="flex-1 overflow-y-auto min-h-0">
-            <ChatBox messages={messages} loading={loading} onSend={handleSend} />
+            <ChatBox
+              messages={messages}
+              loading={loading}
+              onSend={handleSend}
+              onEdit={handleEdit}
+            />
           </div>
 
           <div className="mt-3 flex-shrink-0">

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import PageWrapper from "../components/layout/PageWrapper"
 import { useAuth } from "../context/AuthContext"
 import { db, auth } from "../services/firebase"
-import { collection, query, where, getDocs } from "firebase/firestore"
+import { collection, query, where, onSnapshot } from "firebase/firestore"
 import { updateProfile, updatePassword, deleteUser } from "firebase/auth"
 import toast, { Toaster } from "react-hot-toast"
 import { User, Mail, Lock, Trash2, Save, Shield, BarChart2 } from "lucide-react"
@@ -17,20 +17,27 @@ function SettingsPage() {
   const [loadingDelete, setLoadingDelete] = useState(false)
   const [stats, setStats] = useState({ total: 0, tokens: 0 })
 
+  // Live real-time stats using onSnapshot
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const q = query(collection(db, "conversations"), where("userId", "==", user.uid))
-        const snapshot = await getDocs(q)
-        const docs = snapshot.docs.map((d) => d.data())
-        const totalTokens = docs.reduce((sum, d) => sum + (d.tokens || 0), 0)
-        setStats({ total: docs.length, tokens: totalTokens })
-      } catch (err) {
-        console.error(err)
-      }
-    }
-    fetchStats()
-  }, [])
+    if (!user?.uid) return
+
+    const q = query(
+      collection(db, "conversations"),
+      where("userId", "==", user.uid)
+    )
+
+    // onSnapshot listens in real-time — updates whenever Firestore changes
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const docs = snapshot.docs.map((d) => d.data())
+      const totalTokens = docs.reduce((sum, d) => sum + (d.tokens || 0), 0)
+      setStats({ total: docs.length, tokens: totalTokens })
+    }, (err) => {
+      console.error("Stats error:", err)
+    })
+
+    // Cleanup listener when component unmounts
+    return () => unsubscribe()
+  }, [user?.uid])
 
   const handleUpdateName = async () => {
     if (!displayName.trim()) { toast.error("Name cannot be empty"); return }
@@ -87,19 +94,23 @@ function SettingsPage() {
           <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Manage your account and preferences</p>
         </div>
 
-        {/* Usage Stats */}
+        {/* Live Usage Stats */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <BarChart2 size={18} className="text-sky-500" />
             <h2 className="text-base font-bold text-gray-900 dark:text-white">Your Usage</h2>
+            <span className="ml-auto text-xs text-emerald-500 font-medium flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+              Live
+            </span>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-sky-50 dark:bg-sky-900/20 rounded-xl p-4">
-              <p className="text-2xl font-bold text-sky-600">{stats.total}</p>
+              <p className="text-3xl font-bold text-sky-600">{stats.total}</p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Total Conversations</p>
             </div>
             <div className="bg-violet-50 dark:bg-violet-900/20 rounded-xl p-4">
-              <p className="text-2xl font-bold text-violet-600">{stats.tokens}</p>
+              <p className="text-3xl font-bold text-violet-600">{stats.tokens.toLocaleString()}</p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Total Tokens Used</p>
             </div>
           </div>

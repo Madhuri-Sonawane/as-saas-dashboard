@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react"
 import PageWrapper from "../components/layout/PageWrapper"
 import { db } from "../services/firebase"
-import { collection, query, where, orderBy, getDocs, deleteDoc, doc } from "firebase/firestore"
+import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore"
 import { useAuth } from "../context/AuthContext"
-import { Bot, Clock, Trash2, Search, Zap, MessageSquare } from "lucide-react"
-import toast, { Toaster } from "react-hot-toast"
+import { Bot, Clock, Search, Zap, MessageSquare } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 function HistoryPage() {
@@ -14,44 +13,32 @@ function HistoryPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  const fetchConversations = async () => {
-    setLoading(true)
-    try {
-      const q = query(
-        collection(db, "conversations"),
-        where("userId", "==", user.uid),
-        orderBy("createdAt", "desc")
-      )
-      const snapshot = await getDocs(q)
+  // Live real-time history using onSnapshot
+  useEffect(() => {
+    if (!user?.uid) return
+
+    const q = query(
+      collection(db, "conversations"),
+      where("userId", "==", user.uid),
+      orderBy("createdAt", "desc")
+    )
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }))
       setConversations(data)
-    } catch (err) {
-      toast.error("Failed to load history")
-    } finally {
       setLoading(false)
-    }
-  }
+    }, (err) => {
+      console.error("History error:", err)
+      setLoading(false)
+    })
 
-  useEffect(() => {
-    fetchConversations()
-  }, [])
-
-  const handleDelete = async (e, id) => {
-    e.stopPropagation() // prevent opening conversation
-    try {
-      await deleteDoc(doc(db, "conversations", id))
-      setConversations((prev) => prev.filter((c) => c.id !== id))
-      toast.success("Deleted successfully")
-    } catch (err) {
-      toast.error("Failed to delete")
-    }
-  }
+    return () => unsubscribe()
+  }, [user?.uid])
 
   const handleOpen = (conv) => {
-    // Pass conversation to AI Assistant page via navigation state
     navigate("/ai-assistant", {
       state: {
         messages: [
@@ -79,8 +66,6 @@ function HistoryPage() {
 
   return (
     <PageWrapper>
-      <Toaster position="top-right" />
-
       <div className="flex flex-col gap-6">
 
         {/* Header */}
@@ -91,7 +76,13 @@ function HistoryPage() {
               Click any conversation to continue it
             </p>
           </div>
-          <span className="text-sm text-gray-400">{conversations.length} conversations</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-emerald-500 font-medium flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+              Live
+            </span>
+            <span className="text-sm text-gray-400">{conversations.length} conversations</span>
+          </div>
         </div>
 
         {/* Search */}
@@ -137,8 +128,6 @@ function HistoryPage() {
                 className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md hover:border-sky-200 dark:hover:border-sky-800 transition group cursor-pointer"
               >
                 <div className="flex items-start justify-between gap-4">
-
-                  {/* Left */}
                   <div className="flex items-start gap-4 flex-1 overflow-hidden">
                     <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center flex-shrink-0">
                       <Bot size={18} className="text-sky-500" />
@@ -163,20 +152,13 @@ function HistoryPage() {
                     </div>
                   </div>
 
-                  {/* Right actions */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="opacity-0 group-hover:opacity-100 transition flex items-center gap-1 text-xs text-sky-500 font-medium">
+                  {/* Continue button */}
+                  <div className="flex items-center flex-shrink-0">
+                    <span className="opacity-0 group-hover:opacity-100 transition flex items-center gap-1 text-xs text-sky-500 font-medium bg-sky-50 dark:bg-sky-900/20 px-3 py-1.5 rounded-lg">
                       <MessageSquare size={12} />
                       Continue
                     </span>
-                    <button
-                      onClick={(e) => handleDelete(e, conv.id)}
-                      className="opacity-0 group-hover:opacity-100 transition p-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-300 hover:text-red-500"
-                    >
-                      <Trash2 size={15} />
-                    </button>
                   </div>
-
                 </div>
               </div>
             ))}
