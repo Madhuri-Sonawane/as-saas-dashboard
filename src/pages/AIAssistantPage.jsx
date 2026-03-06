@@ -57,11 +57,9 @@ function AIAssistantPage() {
   const handleEdit = async (index, newText) => {
     if (loading) return
 
-    // Keep messages before the edited one
     const trimmedMessages = messages.slice(0, index)
     setMessages(trimmedMessages)
 
-    // Resend with new text
     await handleSend(newText)
   }
 
