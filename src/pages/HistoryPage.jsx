@@ -23,8 +23,6 @@ function HistoryPage() {
       orderBy("createdAt", "desc")
     )
 
-    // onSnapshot so new conversations appear instantly
-    // Data persists in Firestore permanently — logout/login won't affect it
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((d) => ({
         id: d.id,
